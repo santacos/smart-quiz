@@ -3,9 +3,6 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing ( onClick )
 
--- component import example
-import Components.Hello exposing ( hello )
-
 
 -- APP
 main : Program Never Model Msg
@@ -14,50 +11,86 @@ main =
 
 
 -- MODEL
-type alias Model = Int
+type alias Choice = String
+type alias Question = {
+  content: String
+  , choices: List Choice
+  , correctChoice: String
+  , selectedChoice: Maybe Choice
+}
+type alias Model = { score: Int, question: Question, isAnswerCorrect: Maybe Bool }
 
 model : Model
-model = 0
+model = {
+  score = 0
+  , isAnswerCorrect = Nothing
+  , question = Question "What is your name?" ["Cos", "Dog", "Green", "Red"] "Cos" Nothing
+  }
+
+-- Question 
+
+setSelectedChoice : Maybe Choice -> Question -> Question
+setSelectedChoice selectedChoice question =
+  case selectedChoice of
+    Just choice -> { question | selectedChoice = selectedChoice }
+    Nothing -> question
+
+
+checkAnswer : Question -> Bool
+checkAnswer question =
+  case question.selectedChoice of
+    Just choice -> if choice == question.correctChoice then True else False
+    Nothing -> False
+
+updateScore : Int -> Question -> Int
+updateScore previousScore question =
+  if checkAnswer question then previousScore + 1
+  else previousScore
+
+
+isSelected : Choice -> Maybe Choice -> Bool
+isSelected choice selectedChoice =
+  case selectedChoice of
+    Just realSelectedChoice -> choice == realSelectedChoice
+    Nothing -> False
 
 
 -- UPDATE
-type Msg = NoOp | Increment
+type Msg = NoOp | CheckAnswer | Choose Choice
 
 update : Msg -> Model -> Model
 update msg model =
   case msg of
     NoOp -> model
-    Increment -> model + 1
+    CheckAnswer -> { model | score = updateScore model.score model.question, isAnswerCorrect = Just (checkAnswer model.question) }
+    Choose choice -> { model | question = setSelectedChoice (Just choice) model.question }
 
 
--- VIEW
--- Html is defined as: elem [ attribs ][ children ]
--- CSS can be applied via class names or inline style attrib
+-- View
+
 view : Model -> Html Msg
 view model =
-  div [ class "container", style [("margin-top", "30px"), ( "text-align", "center" )] ][    -- inline CSS (literal)
+  div [ class "container", style [("margin-top", "30px"), ( "text-align", "center" )] ][
     div [ class "row" ][
       div [ class "col-xs-12" ][
-        div [ class "jumbotron" ][
-          img [ src "static/img/elm.jpg", style styles.img ] []                             -- inline CSS (via var)
-          , hello model                                                                     -- ext 'hello' component (takes 'model' as arg)
-          , p [] [ text ( "Elm Webpack Starter" ) ]
-          , button [ class "btn btn-primary btn-lg", onClick Increment ] [                  -- click handler
-            span[ class "glyphicon glyphicon-star" ][]                                      -- glyphicon
-            , span[][ text "FTW!" ]
-          ]
+        div [ class "quiz" ][
+          h3 [class "question"] [text model.question.content]
+          , viewResult model.isAnswerCorrect
+          , div [class "list-group"] <| List.map (\choice -> choiceButton choice model.question.selectedChoice) model.question.choices
+          , button [class "check", onClick CheckAnswer] [text "Check"]
         ]
       ]
     ]
   ]
 
+viewResult : Maybe Bool -> Html msg
+viewResult show =
+  let result = case show of
+            Just isShow -> if isShow then "The answer is correct!" else "Wrong!"
+            Nothing -> ""
+  in 
+    h5 [] [text result]
 
--- CSS STYLES
-styles : { img : List ( String, String ) }
-styles =
-  {
-    img =
-      [ ( "width", "33%" )
-      , ( "border", "4px solid #337AB7")
-      ]
-  }
+choiceButton : Choice -> Maybe Choice -> Html Msg
+choiceButton choice selectedChoice =
+  li [class "choice", classList [("active",isSelected choice selectedChoice)], onClick (Choose choice)] [text choice]

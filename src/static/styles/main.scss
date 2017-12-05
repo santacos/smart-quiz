@@ -3,3 +3,49 @@ $icon-font-path: '~bootstrap-sass/assets/fonts/bootstrap/';
 @import '~bootstrap-sass/assets/stylesheets/_bootstrap.scss';
 
 // can add Boostrap overrides, additional Sass/CSS below...
+$yellow: #FFD433;
+$light-yellow: #ffd43305;
+
+.choice {
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    background-color: #fff;
+    margin-bottom: 9px;
+    list-style: none;
+    font-size: 20px;    
+    padding: 7px;
+}
+
+.choice.active {
+    border: 2px solid $yellow;
+    background-color: $light-yellow;
+}
+
+.quiz {
+    border-radius: 10px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    padding: 2em 1em;
+    height: 44em;
+
+    h3.question {
+        padding-bottom: 20px;
+    }
+
+    ul > li {
+        padding-bottom: 5px;
+    }
+
+    .check {
+        width: 100%;
+        border-radius: 20px;
+        font-size: 20px;
+        // margin-top: 10em;
+        @extend .btn;
+        @extend .btn-success;
+    }
+}
+
+body {
+    background-color: #fff;
+}

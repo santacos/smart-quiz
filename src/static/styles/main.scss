@@ -6,6 +6,21 @@ $icon-font-path: '~bootstrap-sass/assets/fonts/bootstrap/';
 $yellow: #FFD433;
 $light-yellow: #ffd43305;
 
+$tablet-width: 768px;
+$desktop-width: 1024px;
+
+@mixin tablet {
+  @media (min-width: #{$tablet-width}) and (max-width: #{$desktop-width - 1px}) {
+    @content;
+  }
+}
+
+@mixin desktop {
+  @media (min-width: #{$desktop-width}) {
+    @content;
+  }
+}
+
 .choice {
     border: 1px solid #ddd;
     border-radius: 20px;
@@ -14,6 +29,13 @@ $light-yellow: #ffd43305;
     list-style: none;
     font-size: 20px;    
     padding: 7px;
+
+    @include desktop {
+        width: 49%;
+        display: inline-block;
+        height: 100%;
+        margin: 3px 5px;
+    }
 }
 
 .choice.active {
@@ -40,9 +62,16 @@ $light-yellow: #ffd43305;
         width: 100%;
         border-radius: 20px;
         font-size: 20px;
-        // margin-top: 10em;
+        margin-top: 10em;
         @extend .btn;
         @extend .btn-success;
+        @include desktop {
+            margin-top: 1em;
+        }
+    }
+
+    @include desktop {
+        height: 27em;
     }
 }
 

@@ -58,6 +58,7 @@ updateScore previousScore question =
     _ -> previousScore
 
 -- UPDATE
+
 type Msg = NoOp | CheckAnswer | Choose Choice
 
 update : Msg -> Model -> Model
@@ -65,8 +66,8 @@ update msg model =
   case msg of
     NoOp -> model
     CheckAnswer -> {
-      model | score = updateScore model.score model.question
-      , question = validateQuestion model.question
+      model | question = validateQuestion model.question
+      , score = updateScore model.score model.question
     }
     Choose choice -> { model | question = setSelectedChoice choice model.question }
 
@@ -80,8 +81,8 @@ view model =
       div [ class "col-xs-12" ][
         div [ class "quiz" ][
           h3 [class "question"] [text model.question.content]
-          , viewResult model.question
           , div [class "list-group"] <| List.map (\choice -> choiceButton choice model.question.state) model.question.choices
+          , viewResult model.question
           , button [class "check", onClick CheckAnswer] [text "Check"]
         ]
       ]

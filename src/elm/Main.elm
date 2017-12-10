@@ -16,42 +16,46 @@ type alias Question = {
   content: String
   , choices: List Choice
   , correctChoice: String
-  , selectedChoice: Maybe Choice
   , state: QuestionState
 }
 
-type QuestionState = NotAnswered | Answered Choice | Validated Bool
+type Result = Correct Choice | Incorrect Choice | Empty
 
-type alias Model = { score: Int, question: Question, isAnswerCorrect: Maybe Bool }
+type QuestionState = NotAnswered | Answered Choice | Validated Result
+
+type alias Model = { score: Int, question: Question }
 
 -- type alias Model = { questions: List Question, focusQuestion: }
 
 model : Model
 model = {
   score = 0
-  , isAnswerCorrect = Nothing
-  , question = Question "What is your name?" ["Cos", "Dog", "Green", "Red"] "Cos" Nothing NotAnswered
+  , question = Question "What is your name?" ["Cos", "Dog", "Green", "Red"] "Cos" NotAnswered
   }
 
 -- Question 
 
-setSelectedChoice : Maybe Choice -> Question -> Question
+setSelectedChoice : Choice -> Question -> Question
 setSelectedChoice selectedChoice question =
-  case selectedChoice of
-    Just choice -> { question | state = Answered choice }
-    Nothing -> question
+  { question | state = Answered selectedChoice }
 
+validateQuestion : Question -> Question
+validateQuestion question =
+  case question.state of
+    Answered choice -> { question | state = Validated (checkAnswer question) }
+    _ -> { question | state = Validated Empty }
 
-checkAnswer : Question -> Bool
+checkAnswer : Question -> Result
 checkAnswer question =
   case question.state of
-    Answered choice -> if choice == question.correctChoice then True else False
-    _ -> False
+    Answered choice -> if choice == question.correctChoice then Correct choice else Incorrect choice
+    _ -> Empty
 
 updateScore : Int -> Question -> Int
 updateScore previousScore question =
-  if checkAnswer question then previousScore + 1
-  else previousScore
+  case question.state of
+    Validated (Correct answer) -> previousScore + 1
+    _ -> previousScore
 
 -- UPDATE
 type Msg = NoOp | CheckAnswer | Choose Choice
@@ -61,9 +65,10 @@ update msg model =
   case msg of
     NoOp -> model
     CheckAnswer -> {
-      model | score = updateScore model.score model.question, isAnswerCorrect = Just (checkAnswer model.question)
+      model | score = updateScore model.score model.question
+      , question = validateQuestion model.question
     }
-    Choose choice -> { model | question = setSelectedChoice (Just choice) model.question }
+    Choose choice -> { model | question = setSelectedChoice choice model.question }
 
 
 -- View
@@ -75,7 +80,7 @@ view model =
       div [ class "col-xs-12" ][
         div [ class "quiz" ][
           h3 [class "question"] [text model.question.content]
-          , viewResult model.isAnswerCorrect
+          , viewResult model.question
           , div [class "list-group"] <| List.map (\choice -> choiceButton choice model.question.state) model.question.choices
           , button [class "check", onClick CheckAnswer] [text "Check"]
         ]
@@ -83,11 +88,15 @@ view model =
     ]
   ]
 
-viewResult : Maybe Bool -> Html msg
-viewResult show =
-  let result = case show of
-            Just isShow -> if isShow then "The answer is correct!" else "Wrong!"
-            Nothing -> ""
+viewResult : Question -> Html msg
+viewResult question =
+  let result =
+    case question.state of
+      Validated (Correct answer) -> "Congratulations!! The answer is correct."
+      Validated (Incorrect answer) -> "Sorry! The answer is wrong."
+      Validated Empty -> "Please select the answer first!"
+      _ -> ""
+            
   in 
     h5 [] [text result]
 
@@ -97,6 +106,8 @@ choiceButton choice state =
     isSelected = 
       case state of
         Answered selectedChoice -> choice == selectedChoice
+        Validated (Correct selectedChoice) -> choice == selectedChoice
+        Validated (Incorrect selectedChoice) -> choice == selectedChoice
         _ -> False
   in
     li [class "choice", classList [("active", isSelected)], onClick (Choose choice)] [text choice]

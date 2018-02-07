@@ -13,7 +13,7 @@ main =
 
 -- MODEL
 type Page = WelcomePage | QuestionPage
-type alias Model = { question: Question, currentPage: Page}
+type alias Model = { question: Question, currentPage: Page }
 
 model : Model
 model = {
@@ -24,13 +24,14 @@ model = {
 
 -- UPDATE
 
-type Msg = CheckAnswer | Choose Choice
+type Msg = CheckAnswer | Choose Choice | StartQuiz
 
 update : Msg -> Model -> Model
 update msg model =
   case msg of
     CheckAnswer -> { model | question = validateQuestion model.question }
     Choose choice -> { model | question = setSelectedChoice choice model.question }
+    StartQuiz -> { model | currentPage = QuestionPage }
 
 
 -- View
@@ -64,7 +65,7 @@ welcomeView : Html Msg
 welcomeView =
   div [ class "quiz" ][
     h3 [class "question"] [text "Welcome to SMART QUIZ SYSTEM"]
-    , button [class "check"] [text "START"]
+    , button [class "check", onClick StartQuiz] [text "START"]
   ]
 
 checkButton : QuestionState -> Html Msg
